@@ -54,6 +54,7 @@ int main(int argc, char* argv[]) {
   // Create an SDL window with OpenGL
   SDL_Window* window = SDL_CreateWindow("Graphics engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
   SDL_GLContext glContext = SDL_GL_CreateContext(window);
+  SDL_SetRelativeMouseMode(SDL_TRUE);
   SDL_GL_SetSwapInterval(1);
 
   // Initialize GLEW
@@ -87,8 +88,11 @@ int main(int argc, char* argv[]) {
 
   int shaderProgram = createMesh();
 
-  float x, y = 0.0;
-  float z = -3.0;
+
+  float x = 0.0, y = 0.0, z = -3.0;
+  vec3 cameraPos = {x,y,z};
+  float yrotation = 0.0;
+  float xrotation = 0.0;
 
   mat4 view, projection;
 
@@ -110,32 +114,52 @@ int main(int argc, char* argv[]) {
         case SDL_QUIT:
           quit = 1;
           break;
+
+        case SDL_MOUSEMOTION:
+          yrotation += event.motion.xrel * SENS;
+          xrotation += event.motion.yrel * SENS;
+
+          if (xrotation > 89.0f) {
+            xrotation = 89.0f;
+          }
+          if (xrotation < -89.0f) {
+            xrotation = -89.0f;
+          }
+          break;
+
         case SDL_KEYDOWN:
           switch (event.key.keysym.sym) {
             case SDLK_w:
-              z+=SPEED;
+              cameraPos[0] -= SPEED * sin(glm_rad(yrotation));
+              cameraPos[2] += SPEED * cos(glm_rad(yrotation));
               break;
             case SDLK_a:
-              x+=SPEED;
+              cameraPos[0] += SPEED * cos(glm_rad(yrotation));
+              cameraPos[2] += SPEED * sin(glm_rad(yrotation));
               break;
             case SDLK_s:
-              z-=SPEED;
+              cameraPos[0] += SPEED * sin(glm_rad(yrotation));
+              cameraPos[2] -= SPEED * cos(glm_rad(yrotation));
               break;
             case SDLK_d:
-              x-=SPEED;
+              cameraPos[0] -= SPEED * cos(glm_rad(yrotation));
+              cameraPos[2] -= SPEED * sin(glm_rad(yrotation));
               break;
               
             case SDLK_q:
-              y+=SPEED;
+              cameraPos[1] += SPEED;
               break;
             case SDLK_e:
-              y-=SPEED;
+              cameraPos[1] -= SPEED;
               break;
           }
       }
     }
 
-    glm_translate_make(view, (vec3){x, y, z});
+    glm_mat4_identity(view);
+    glm_rotate(view, glm_rad(xrotation), (vec3){1.0f, 0.0f, 0.0f});
+    glm_rotate(view, glm_rad(yrotation), (vec3){0.0f, 1.0f, 0.0f});
+    glm_translate(view, cameraPos);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);  // Set the background color
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
