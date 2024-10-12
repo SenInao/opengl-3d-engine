@@ -5,8 +5,11 @@
 #include <GL/glew.h>
 #include <stdio.h>
 #include <cglm/cglm.h>
+#include <objImporter.h>
 
-#include "../include/shaders.h"
+#include "../include/3d-engine.h"
+
+Model humanModel;
 
 float vertices[] = {
     0.5f,  0.5f,  0.5f,  // front top right
@@ -16,7 +19,7 @@ float vertices[] = {
     0.5f,  0.5f, -0.5f,  // back top right
     0.5f, -0.5f, -0.5f,  // back bottom right
    -0.5f, -0.5f, -0.5f,  // back bottom left
-   -0.5f,  0.5f, -0.5f   // back top left
+   -0.5f,  0.5f, -0.5f  // back top left
 };
 
 unsigned int indices[] = {
@@ -79,7 +82,6 @@ int main(int argc, char* argv[]) {
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
@@ -88,11 +90,10 @@ int main(int argc, char* argv[]) {
 
   int shaderProgram = createMesh();
 
-
   float x = 0.0, y = 0.0, z = -3.0;
   vec3 cameraPos = {x,y,z};
-  float yrotation = 0.0;
-  float xrotation = 0.0;
+  float yaw = 0.0;
+  float pitch = 0.0;
 
   mat4 view, projection;
 
@@ -108,57 +109,16 @@ int main(int argc, char* argv[]) {
   int quit = 0;
   SDL_Event event;
 
+  const Uint8 *keys = SDL_GetKeyboardState(NULL);
+
+  humanModel = loadModel("human.obj");
+
   while (!quit) {
-    while (SDL_PollEvent(&event) != 0) {
-      switch (event.type) {
-        case SDL_QUIT:
-          quit = 1;
-          break;
-
-        case SDL_MOUSEMOTION:
-          yrotation += event.motion.xrel * SENS;
-          xrotation += event.motion.yrel * SENS;
-
-          if (xrotation > 89.0f) {
-            xrotation = 89.0f;
-          }
-          if (xrotation < -89.0f) {
-            xrotation = -89.0f;
-          }
-          break;
-
-        case SDL_KEYDOWN:
-          switch (event.key.keysym.sym) {
-            case SDLK_w:
-              cameraPos[0] -= SPEED * sin(glm_rad(yrotation));
-              cameraPos[2] += SPEED * cos(glm_rad(yrotation));
-              break;
-            case SDLK_a:
-              cameraPos[0] += SPEED * cos(glm_rad(yrotation));
-              cameraPos[2] += SPEED * sin(glm_rad(yrotation));
-              break;
-            case SDLK_s:
-              cameraPos[0] += SPEED * sin(glm_rad(yrotation));
-              cameraPos[2] -= SPEED * cos(glm_rad(yrotation));
-              break;
-            case SDLK_d:
-              cameraPos[0] -= SPEED * cos(glm_rad(yrotation));
-              cameraPos[2] -= SPEED * sin(glm_rad(yrotation));
-              break;
-              
-            case SDLK_q:
-              cameraPos[1] += SPEED;
-              break;
-            case SDLK_e:
-              cameraPos[1] -= SPEED;
-              break;
-          }
-      }
-    }
+    handleEvents(keys, &quit, &yaw, &pitch, cameraPos, event);
 
     glm_mat4_identity(view);
-    glm_rotate(view, glm_rad(xrotation), (vec3){1.0f, 0.0f, 0.0f});
-    glm_rotate(view, glm_rad(yrotation), (vec3){0.0f, 1.0f, 0.0f});
+    glm_rotate(view, glm_rad(pitch), (vec3){1.0f, 0.0f, 0.0f});
+    glm_rotate(view, glm_rad(yaw), (vec3){0.0f, 1.0f, 0.0f});
     glm_translate(view, cameraPos);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);  // Set the background color
@@ -170,7 +130,8 @@ int main(int argc, char* argv[]) {
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, (const float *)projection);
 
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]), GL_UNSIGNED_INT, 0);
+    drawModelFaces(humanModel);
+    //glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
     SDL_GL_SwapWindow(window);
