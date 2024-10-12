@@ -9,7 +9,6 @@
 
 #include "../include/3d-engine.h"
 
-Model humanModel;
 
 float vertices[] = {
     0.5f,  0.5f,  0.5f,  // front top right
@@ -55,7 +54,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Create an SDL window with OpenGL
-  SDL_Window* window = SDL_CreateWindow("Graphics engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+  SDL_Window* window = SDL_CreateWindow("Graphics engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, VIEWWIDTH, VIEWHEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
   SDL_GLContext glContext = SDL_GL_CreateContext(window);
   SDL_SetRelativeMouseMode(SDL_TRUE);
   SDL_GL_SetSwapInterval(1);
@@ -66,7 +65,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  glViewport(0, 0, 640, 480);
+  glViewport(0, 0, VIEWWIDTH, VIEWHEIGHT);
 
   unsigned int VAO;
   glGenVertexArrays(1, &VAO);
@@ -111,7 +110,17 @@ int main(int argc, char* argv[]) {
 
   const Uint8 *keys = SDL_GetKeyboardState(NULL);
 
+  Model humanModel;
+  Model human2Model;
+  Model terrainModel;
+
   humanModel = loadModel("human.obj");
+  terrainModel = loadModel("flat.obj");
+
+  for (int i = 0; i < humanModel.totV; i++) {
+    humanModel.v[i].X += 10;
+    humanModel.v[i].Y += 7;
+  }
 
   while (!quit) {
     handleEvents(keys, &quit, &yaw, &pitch, cameraPos, event);
@@ -131,6 +140,7 @@ int main(int argc, char* argv[]) {
 
     glBindVertexArray(VAO);
     drawModelFaces(humanModel);
+    drawModelFaces(terrainModel);
     //glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
