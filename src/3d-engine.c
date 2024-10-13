@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);  
 
-  int shaderProgram = createMesh();
+  int shaderProgram = createShader();
 
   float x = 0.0, y = 0.0, z = -3.0;
   vec3 cameraPos = {x,y,z};
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
   mat4 view, projection;
 
   glm_translate_make(view, (vec3){x, y, z});
-  glm_perspective(glm_rad(45.0f), (float)640 / (float)480, 0.1f, 100.0f, projection);
+  glm_perspective(glm_rad(45.0f), VIEWWIDTH / VIEWHEIGHT, 0.1f, 100.0f, projection);
 
   unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
   unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");

@@ -17,7 +17,7 @@ const char *fragmentShaderSource = "#version 330 core\n"
 " FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 "}\0";
 
-int createMesh() {
+int createShader() {
   unsigned int vertexShader;
   vertexShader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
