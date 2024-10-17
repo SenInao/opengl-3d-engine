@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <cglm/cglm.h>
 
-#define SPEED 0.02f
+#define SPEED 1.0f
 #define SENS 0.1f
 
 #define VIEWHEIGHT 600.0f
