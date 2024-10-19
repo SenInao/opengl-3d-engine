@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #define SDL_MAIN_HANDLED
 
 #include <SDL2/SDL.h>
@@ -10,49 +11,6 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
-typedef struct Vertex {
-  float x;
-  float y;
-  float z;
-} Vertex;
-
-float vertices[] = {
-    0.5f,  0.5f,  0.5f,  // front top right
-    0.5f, -0.5f,  0.5f,  // front bottom right
-   -0.5f, -0.5f,  0.5f,  // front bottom left
-   -0.5f,  0.5f,  0.5f,  // front top left
-    0.5f,  0.5f, -0.5f,  // back top right
-    0.5f, -0.5f, -0.5f,  // back bottom right
-   -0.5f, -0.5f, -0.5f,  // back bottom left
-   -0.5f,  0.5f, -0.5f  // back top left
-};
-
-unsigned int indices[] = {
-    // Front face
-    0, 1, 3,
-    1, 2, 3,
-
-    // Back face
-    4, 5, 7,
-    5, 6, 7,
-
-    // Left face
-    3, 2, 7,
-    2, 6, 7,
-
-    // Right face
-    0, 1, 4,
-    1, 5, 4,
-
-    // Top face
-    3, 0, 4,
-    3, 4, 7,
-
-    // Bottom face
-    1, 2, 6,
-    1, 6, 5
-};
 
 int main(int argc, char* argv[]) {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -72,46 +30,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  //load image
-  int width, height, channels;
-
-  unsigned char *data = stbi_load("heightmap.png", &width, &height, &channels, 0);
-
-  if (data == NULL) {
-    printf("Failed to load image\n");
-    return -1;
-  }
-
-  printf("%d, %d\n", width, height);
-
-  Vertex **map;
-
-  map = malloc(sizeof(Vertex*)*width);
-
-  for (int i = 0; i < width; i++) {
-    map[i] = malloc(sizeof(Vertex)*height);
-  }
-
-  for (int i = 0; i < width; i++) {
-    for (int j = 0; j < height; j++) {
-      int index = (i + j * width) * channels;
-      unsigned char pixelValue = data[index];
-
-      float heightValue = pixelValue / 255.0f;
-
-      map[i][j].x = i;
-      map[i][j].y = heightValue * 250;
-      map[i][j].z = j;
-    }
-  }
-
-  Vertex *vertices = malloc(sizeof(Vertex) * width * height);
-
-  for (int i = 0; i < width; i++) {
-    for (int j = 0; j < height; j++) {
-      vertices[i * height + j] = map[i][j];
-    }
-  }
+  Model heightmap = createHeightmapModel("heightmap.png");
 
   glViewport(0, 0, VIEWWIDTH, VIEWHEIGHT);
 
@@ -127,9 +46,12 @@ int main(int argc, char* argv[]) {
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * width * height, vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * heightmap.sizeVertices, heightmap.vertices, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(Vertex), (void*)0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * heightmap.sizeIndices, heightmap.indices, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
   glEnableVertexAttribArray(0);  
 
   int shaderProgram = createShader();
@@ -173,7 +95,8 @@ int main(int argc, char* argv[]) {
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, (const float *)projection);
 
     glBindVertexArray(VAO);
-    glDrawArrays(GL_POINTS, 0, width*height);
+    //glDrawArrays(GL_POINTS, 0, width*height);
+    glDrawElements(GL_TRIANGLES, heightmap.sizeIndices, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
     SDL_GL_SwapWindow(window);
@@ -183,8 +106,6 @@ int main(int argc, char* argv[]) {
   glDeleteBuffers(1, &VBO);
   glDeleteBuffers(1, &EBO);
   glDeleteProgram(shaderProgram);
-
-  stbi_image_free(data);
 
   SDL_GL_DeleteContext(glContext);
   SDL_DestroyWindow(window);
