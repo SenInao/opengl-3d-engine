@@ -27,3 +27,13 @@ typedef struct Model {
 Model createHeightmapModel(char *filename);
 int createShader();
 void handleEvents(const Uint8 *keys, int *quit, float *yaw, float *pitch, vec3 cameraPos, SDL_Event event);
+
+GLuint createVBO();
+void bindVBO(GLuint VBO, int size, Vertex *vertices);
+
+GLuint createEBO();
+void bindEBO(GLuint EBO, int size, int *indices);
+
+GLuint createVAO();
+void bindVAO(GLuint VAO);
+void enableVertexAttr();

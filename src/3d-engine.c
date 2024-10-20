@@ -34,25 +34,15 @@ int main(int argc, char* argv[]) {
 
   glViewport(0, 0, VIEWWIDTH, VIEWHEIGHT);
 
-  unsigned int VAO;
-  glGenVertexArrays(1, &VAO);
+  GLuint VAO = createVAO();
+  GLuint VBO = createVBO();
+  GLuint EBO = createEBO();
 
-  unsigned int VBO;
-  glGenBuffers(1, &VBO);
+  bindVAO(VAO);
+  bindVBO(VBO, heightmap.sizeVertices, heightmap.vertices);
+  bindEBO(EBO, heightmap.sizeIndices, heightmap.indices);
 
-  unsigned int EBO;
-  glGenBuffers(1, &EBO);
-
-  glBindVertexArray(VAO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * heightmap.sizeVertices, heightmap.vertices, GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * heightmap.sizeIndices, heightmap.indices, GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-  glEnableVertexAttribArray(0);  
+  enableVertexAttr();
 
   int shaderProgram = createShader();
 
@@ -95,7 +85,6 @@ int main(int argc, char* argv[]) {
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, (const float *)projection);
 
     glBindVertexArray(VAO);
-    //glDrawArrays(GL_POINTS, 0, width*height);
     glDrawElements(GL_TRIANGLES, heightmap.sizeIndices, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
